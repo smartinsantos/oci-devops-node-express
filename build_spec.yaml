@@ -10,7 +10,8 @@ env:
   # the value of a vaultVariable is the secret-id (in OCI ID format) stored in the OCI Vault service
   # you can then access the value of that secret in your build_spec.yaml commands
   vaultVariables:
-
+    OCIR_DOCKER_USER: "ocid1.vaultsecret.oc2.us-langley-1.amaaaaaay5iboriahbujaiilpr6amojxhjnrlznhqolex6lhevbx3n24mwhq"
+    OCIR_DOCKER_PWD: "ocid1.vaultsecret.oc2.us-langley-1.amaaaaaay5iboriahsvvc3mctrrshhnbquieatoqkr2zw44kt5cjmn4tu67a"
   # exportedVariables are made available to use as parameters in sucessor Build Pipeline stages
   # For this Build to run, the Build Pipeline needs to have a BUILDRUN_HASH parameter set
   exportedVariables:
@@ -96,6 +97,17 @@ steps:
         timeoutInSeconds: 40
         runAs: root
 
+  - type: Command
+    timeoutInSeconds: 1200
+    name: "Push built container image to OCIR"
+    command: |
+      cd ${OCI_WORKSPACE_DIR}/node_express
+      # do docker login
+      echo ${OCIR_DOCKER_PWD} | docker login lfi.ocir.io -u ${OCIR_DOCKER_USER} --password-stdin
+      # tag 
+      docker tag node-express-getting-started:latest lfi.ocir.io/odx-pipelines/js-test/node-express-getting-started:${BUILDRUN_HASH}
+      # push
+      docker push lfi.ocir.io/odx-pipelines/js-test/node-express-getting-started:${BUILDRUN_HASH}
 
 outputArtifacts:
   - name: output01
